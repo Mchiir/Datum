@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            height: 100vh;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #customers {
+            font-family: Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        #customers td, #customers th {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        #customers tr:nth-child(even) {background-color: #f2f2f2;}
+
+        #customers tr:hover {background-color: #ddd;}
+
+        #customers th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            text-align: left;
+            background-color: #474a49;
+            color: white;
+        }        
+
+        button#edit {
+            background-color: #4CAF50;
+            color: white;
+        }
+        button#delete {
+            background-color: rgb(252, 112, 5);
+            color: white;
+        }
+
+        .header {
+            position: relative;
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .header h1 {
+            margin: 0;
+            text-align: center;
+        }
+
+        #addbtn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #4bb1f0;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        #addbtn:hover {
+            background-color: #0b9bf5; /* Slightly darker shade on hover */
+        }
+
+        #addbtn i {
+            font-size: 18px;
+        }
+
+        #pagination-controls {
+        position: absolute;
+        bottom: 20px; /* Distance from the bottom of the page */
+        right: 20px; /* Distance from the right edge of the page */
+        display: flex;
+        gap: 10px; /* Space between buttons */
+    }
+
+    #pagination-controls button {
+        padding: 8px 16px;
+        font-size: 14px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        background-color: #302a25;
+        color: white;
+        transition: background-color 0.3s ease;
+    }
+
+    #pagination-controls button:hover {
+        background-color: #020202;
+    }
+
+    #pagination-controls button:disabled {
+        background-color: #ccc; /* Gray color for disabled buttons */
+        cursor: not-allowed;
+    }
+
+    #order-div {
+        display: flex;
+        justify-content: space-between;
+    }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>All students management is here!</h1>
+        <button type="button" onclick="openAddPopup()" title="Add new student" id="addbtn">
+            <i class="add-icon">+</i> Add
+        </button>
+    </div>
+<table id="customers">
+    <thead>
+        <tr>
+            <th>
+                <div id="order-div">
+                    No. 
+                    <button type="button" id="order-toggle">
+                        <span id="order-icon">&#8593;</span> <!-- Initial Up Arrow (Ascending) -->
+                    </button>
+                </div>
+            </th>
+            <th>First name</th>
+            <th>Second name</th>
+            <th>Email</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Rows will be appended dynamically -->
+    </tbody>
+
+</table>
+
+<section id="pagination-controls">
+    <button id="first" onclick="goToPage(1)">First</button>
+    <button id="prev" onclick="goToPage(currentPage - 1)">Previous</button>
+    <span id="page-number">Page 1</span>
+    <button id="next" onclick="goToPage(currentPage + 1)">Next</button>
+    <button id="last" onclick="goToPage(totalPages)">Last</button>
+  </section>
+
+<footer>
+
+</footer>
+
+<script>
+    let students = []; // Declare students globally
+    let currentPage = 1;
+    let totalPages = 1;
+    const studentsPerPage = 8;
+    $(document).ready(() => {
+        load();
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const orderButton = document.getElementById('order-toggle');
+        const orderIcon = document.getElementById('order-icon');
+        
+        // Set initial state to 'asc' if it's not set
+        if (!orderButton.classList.contains('asc') && !orderButton.classList.contains('desc')) {
+            orderButton.classList.add('asc');
+            orderIcon.innerHTML = '&#8593;'; // Set the default icon to Up (↑)
+        }
+
+        // Now handle the click event
+        orderButton.addEventListener('click', function() {
+            const currentOrder = this.classList.contains('asc') ? 'asc' : 'desc';
+            const newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
+
+            // Toggle the order class for visual indication and sorting behavior
+            this.classList.remove(currentOrder);
+            this.classList.add(newOrder);
+
+            // Toggle the icon direction
+            orderIcon.innerHTML = newOrder === 'asc' ? '&#8593;' : '&#8595;'; // Switch to Up (↑) or Down (↓)
+
+            // Sort the table based on the "No." column
+            sortTable(newOrder);
+        });
+
+        // Load students and render table
+        load();
+    });
+
+    function sortTable(order) {
+        const table = document.querySelector('table');
+        const rows = Array.from(table.querySelectorAll('tbody tr'));
+
+        // Sort rows based on the first column ("No.")
+        rows.sort((rowA, rowB) => {
+            const numA = parseInt(rowA.querySelector('td:first-child').textContent, 10);
+            const numB = parseInt(rowB.querySelector('td:first-child').textContent, 10);
+            
+            return order === 'asc' ? numA - numB : numB - numA;
+        });
+
+        // Reorder rows in the table body
+        const tbody = table.querySelector('tbody');
+        rows.forEach(row => tbody.appendChild(row));
+    }
+
+    const getDescendingOrder = (array) => {
+        function merge(arr, left, middle, right) {
+            // Length of both sorted subarrays
+            let l1 = middle - left + 1;
+            let l2 = right - middle;
+
+            // Create new subarrays
+            let arr1 = new Array(l1);
+            let arr2 = new Array(l2);
+
+            // Assign values in subarrays
+            for (let i = 0; i < l1; ++i) {
+                arr1[i] = arr[left + i];
+            }
+            for (let i = 0; i < l2; ++i) {
+                arr2[i] = arr[middle + 1 + i];
+            }
+
+            // To traverse and modify the main array
+            let i = 0,
+                j = 0,
+                k = left;
+
+            // Assign the larger `id` for descending sorted output
+            while (i < l1 && j < l2) {
+                if (parseInt(arr1[i].id) > parseInt(arr2[j].id)) {
+                    arr[k] = arr1[i];
+                    ++i;
+                } else {
+                    arr[k] = arr2[j];
+                    ++j;
+                }
+                ++k;
+            }
+
+            // Update the remaining elements
+            while (i < l1) {
+                arr[k] = arr1[i];
+                ++i;
+                ++k;
+            }
+            while (j < l2) {
+                arr[k] = arr2[j];
+                ++j;
+                ++k;
+            }
+
+          
+        }
+
+        function mergeSort(arr, left, right) {
+            if (left >= right) {
+                return;
+            }
+
+            // Middle index to create subarray halves
+            let middle = left + Math.floor((right - left) / 2);
+
+            // Apply mergeSort to both halves
+            mergeSort(arr, left, middle);
+            mergeSort(arr, middle + 1, right);
+
+            // Merge both sorted parts
+            merge(arr, left, middle, right);
+        }
+
+        // Call mergeSort on the full array
+        mergeSort(array, 0, array.length - 1);
+
+        return array;
+    };
+
+    function load() {
+        $.ajax({
+            type: "GET",
+            url: "Environment.php",
+            success: function (response) {
+                students = getDescendingOrder(response); // Store the users globally
+                totalPages = Math.ceil(students.length / studentsPerPage); // Recalculate total pages
+                renderStudents(); // Initial render
+            },
+            error: function (xhr, status, error) {
+                console.error("Failed to load userdata.");
+            },
+        });
+    }
+
+    function renderStudents() {
+        const start = (currentPage - 1) * studentsPerPage;
+        const end = start + studentsPerPage;
+        const studentsToShow = students.slice(start, end);
+
+        const tbody = document.getElementById("customers").getElementsByTagName('tbody')[0];
+        tbody.innerHTML = ""; // Clear the table
+
+        studentsToShow.forEach((student, index) => {
+            const row = `
+                <tr>
+                    <td>${start + index + 1}</td>
+                    <td>${student.firstname}</td>
+                    <td>${student.secondname}</td>
+                    <td>${student.email}</td>
+                    <td>
+                        <button type="button" id="edit" onclick="editUser(${student.id})">Edit</button>
+                        <button type="button" id="delete" onclick="deletedata(${student.id})">Delete</button>
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+
+        // Update page number display
+        document.getElementById("page-number").textContent = `Page ${currentPage}`;
+
+        // Disable/Enable pagination buttons
+        document.getElementById("first").disabled = currentPage === 1;
+        document.getElementById("prev").disabled = currentPage === 1;
+        document.getElementById("next").disabled = currentPage === totalPages;
+        document.getElementById("last").disabled = currentPage === totalPages;
+    }
+
+    function goToPage(page) {
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        renderStudents();
+    }
+
+    function display(users) {
+        const tbody = $("#customers tbody");
+        tbody.empty(); // Clear the table body before appending rows
+
+        users.forEach((user, index) => {
+            const row = `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${user.firstname}</td>
+                    <td>${user.secondname}</td>
+                    <td>${user.email}</td>
+                    <td>
+                        <button type="button" id="edit" onclick="editUser(${user.id})">Edit</button>
+                        <button type="button" id="delete" onclick="deletedata(${user.id})">Delete</button>
+                    </td>
+                </tr>
+            `;
+            tbody.append(row);
+        });
+    }
+
+    function openAddPopup() {
+        Swal.fire({
+            title: "Add New User",
+            html: `
+                <input type="text" id="fname" class="swal2-input" placeholder="First Name">
+                <input type="text" id="sname" class="swal2-input" placeholder="Second Name">
+                <input type="email" id="email" class="swal2-input" placeholder="Email">
+            `,
+            confirmButtonText: "Add",
+            focusConfirm: false,
+            preConfirm: () => {
+                const fname = Swal.getPopup().querySelector("#fname").value.trim();
+                const sname = Swal.getPopup().querySelector("#sname").value.trim();
+                const email = Swal.getPopup().querySelector("#email").value.trim();
+
+                // Check if all fields are filled
+                if (!fname || !sname || !email) {
+                    Swal.showValidationMessage(`Please fill all fields`);
+                    return; // Stop further execution
+                }
+                
+                // Validate first name length
+                if (fname.length > 50) {
+                    Swal.showValidationMessage("First name must not exceed 50 characters.");
+                    return; // Stop further execution
+                }
+                
+                // Validate second name length
+                if (sname.length > 50) {
+                    Swal.showValidationMessage("Second name must not exceed 50 characters.");
+                    return; // Stop further execution
+                }
+                
+                // Validate email format
+                if (!validateEmail(email)) {
+                    Swal.showValidationMessage("Please enter a valid email address.");
+                    return; // Stop further execution
+                }
+
+                return { fname, sname, email }; // Return valid data
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                add(result.value);
+            }
+        });
+    }
+
+    function add(userData) {
+        $.ajax({
+            type: "POST",
+            url: "Environment.php",
+            contentType: "application/x-www-form-urlencoded",
+            data: {
+                fName: userData.fname,
+                sName: userData.sname,
+                Email: userData.email,
+            },
+            success: function () {
+                Swal.fire("Added!", "User has been added successfully.", "success");
+                load(); // Reload the table after adding the user
+            },
+            error: function (xhr) {
+                if (xhr.status === 409) {
+                    // Conflict: Duplicate email
+                    Swal.fire("Error", "Email already exists. Please use a different email.", "error");
+                } else if (xhr.status === 500) {
+                    // Server error
+                    Swal.fire("Error", "Failed to save data due to server issues. Please try again later.", "error");
+                } else {
+                    // Generic error
+                    Swal.fire("Error", "An unexpected error occurred. Please try again.", "error");
+                }
+            },
+        });
+    }
+
+    function validateEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Simple email regex pattern
+        return emailRegex.test(email);
+    }
+
+    function deletedata(Id) {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Delete",
+            cancelButtonText: "Cancel",
+            confirmButtonColor: "#d33", // Red color for confirmation
+            cancelButtonColor: "#808080", // Gray color for cancel
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Proceed with the delete action
+                $.ajax({
+                    type: "DELETE",
+                    url: "Environment.php",
+                    contentType: "application/x-www-form-urlencoded",
+                    data: {
+                        id: Id,
+                    },
+                    success: function (response) {
+                        Swal.fire("Deleted!", "User has been deleted successfully.", "success");
+                        load(); // Reload the data after successful deletion
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Failed to delete userdata.");
+                        Swal.fire("Error", "Failed to delete user. Please try again.", "error");
+                    },
+                });
+            }
+        });
+    }
+
+    function editUser(id) {
+        $.ajax({
+            type: "GET",
+            url: "Environment.php",
+            data: {
+                id: id,
+            },
+            success: function (response) {
+                if (response.id == id) {
+                    openEditPopup(response); // Show the form with the fetched data
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error("Failed to fetch userdata for editing.");
+            },
+        });
+    }
+
+    function openEditPopup(userData) {
+        Swal.fire({
+            title: "Edit User",
+            html: `
+                <input type="text" id="fname" class="swal2-input" value="${userData.firstname}" placeholder="First Name">
+                <input type="text" id="sname" class="swal2-input" value="${userData.secondname}" placeholder="Second Name">
+                <input type="email" id="email" class="swal2-input" value="${userData.email}" placeholder="Email">
+            `,
+            confirmButtonText: "Save Changes",
+            focusConfirm: false,
+            preConfirm: () => {
+                const fname = Swal.getPopup().querySelector("#fname").value.trim();
+                const sname = Swal.getPopup().querySelector("#sname").value.trim();
+                const email = Swal.getPopup().querySelector("#email").value.trim();
+
+                // Validate fields
+                if (!fname || !sname || !email) {
+                    Swal.showValidationMessage(`Please fill all fields`);
+                    return;
+                }
+
+                if (fname.length > 50) {
+                    Swal.showValidationMessage("First name must not exceed 50 characters.");
+                    return;
+                }
+
+                if (sname.length > 50) {
+                    Swal.showValidationMessage("Second name must not exceed 50 characters.");
+                    return;
+                }
+
+                if (!validateEmail(email)) {
+                    Swal.showValidationMessage("Please enter a valid email address.");
+                    return;
+                }
+
+                return { id: userData.id, fname, sname, email }; // Return valid data
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                editUser(result.value); // Call editUser to update the data on the server
+            }
+        });
+    }
+
+    
+</script>
+</body>
+</html>
