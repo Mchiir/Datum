@@ -8,14 +8,14 @@ It integrates both backend and frontend technologies to ensure seamless performa
 Technologies Used
 Backend:
 
-    PHP: Handles server-side logic and communication with the database.
-    Apache: Serves the application efficiently.
-    MySQL: Stores and manages all the student records.
+PHP: Handles server-side logic and communication with the database.
+Apache: Serves the application efficiently.
+MySQL: Stores and manages all the student records.
 
 Frontend:
 
-    JavaScript: Provides interactive functionality for user actions.
-    SweetAlert: Enhances user notifications with beautiful, customizable alerts.
+JavaScript: Provides interactive functionality for user actions.
+SweetAlert: Enhances user notifications with beautiful, customizable alerts.
 
 Database Setup
 📧 For assistance:
@@ -27,7 +27,7 @@ Step: Import the Students Table
 
 Run the following command to load the students.sql file into the database:
 
-mysql -u root students < path/to/students.sql
+    mysql -u root students < path/to/students.sql
 
 This command will populate the students database with the required table and data.
 Enjoy managing your student data! 🎓
