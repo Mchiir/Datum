@@ -1,5 +1,6 @@
 <div align="center">
-Datum: Data Management App
+
+# Datum: Data Management App
 
 
 🎉 Welcome to Datum!
