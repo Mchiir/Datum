@@ -3,6 +3,8 @@
 # Datum: Data Management App
 🎉 Welcome to Datum!
 
+</div>
+
 This is a user-friendly data management application designed to efficiently manage student records.
 It integrates both backend and frontend technologies to ensure seamless performance and an intuitive user experience.
 Technologies Used
@@ -35,4 +37,3 @@ Enjoy managing your student data! 🎓
 If you encounter any issues, don’t hesitate to reach out via the email provided above.
 
 # Happy Coding! 🚀
-</div>
