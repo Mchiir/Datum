@@ -1,7 +1,8 @@
 <div align="center">
 
 # Datum: Data Management App
-🎉 Welcome to Datum!
+🎉 Welcome to Datum! PHP||SweetAlert||Mysql
+![demo image](demo.png)
 
 </div>
 
