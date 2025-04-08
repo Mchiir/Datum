@@ -3,7 +3,9 @@
 # Datum: Data Management App
 
 
-🎉 Welcome to Datum!
+🎉 Welcome to Datum! PHP+SweetAlert+Mysql+jQuery
+
+![demo image](demo.png)
 
     This is a user-friendly data management application designed to efficiently manage student records.
     The app uses MySQL as its database to store and manage all the data, making it easy for you to work with and retrieve student information whenever needed.
