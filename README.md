@@ -8,6 +8,7 @@
 This is a user-friendly data management application designed to efficiently manage student records.
 It integrates both backend and frontend technologies to ensure seamless performance and an intuitive user experience.
 Technologies Used
+
 Backend:
 
 PHP: Handles server-side logic and communication with the database.
